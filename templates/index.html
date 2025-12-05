@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Spam & Scam Detector</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            color: #666;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .input-section {
+            margin-bottom: 20px;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: monospace;
+            resize: vertical;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .file-upload {
+            border: 2px dashed #e0e0e0;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .file-upload:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .file-upload.drag-over {
+            border-color: #667eea;
+            background: #f0f2ff;
+        }
+
+        .file-upload input {
+            display: none;
+        }
+
+        .file-list {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+        }
+
+        .button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .results {
+            margin-top: 30px;
+        }
+
+        .result-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid #ccc;
+        }
+
+        .result-card.low {
+            border-left-color: #28a745;
+        }
+
+        .result-card.medium {
+            border-left-color: #ffc107;
+        }
+
+        .result-card.high {
+            border-left-color: #fd7e14;
+        }
+
+        .result-card.critical {
+            border-left-color: #dc3545;
+        }
+
+        .risk-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+            margin-right: 10px;
+        }
+
+        .risk-badge.low { background: #28a745; }
+        .risk-badge.medium { background: #ffc107; color: #333; }
+        .risk-badge.high { background: #fd7e14; }
+        .risk-badge.critical { background: #dc3545; }
+
+        .category-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            background: #6c757d;
+            color: white;
+        }
+
+        .result-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .filename {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .confidence {
+            margin-left: auto;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .summary {
+            margin-bottom: 15px;
+            font-size: 15px;
+            color: #333;
+        }
+
+        .red-flags {
+            margin-bottom: 15px;
+        }
+
+        .red-flags h4 {
+            color: #dc3545;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .red-flags ul {
+            margin-left: 20px;
+        }
+
+        .red-flags li {
+            margin-bottom: 5px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .analysis-details {
+            background: white;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .analysis-item {
+            margin-bottom: 10px;
+        }
+
+        .analysis-item strong {
+            display: block;
+            color: #667eea;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+
+        .analysis-item span {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .recommendation {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 12px;
+            border-radius: 6px;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 15px;
+            color: #856404;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🛡️ Email Spam & Scam Detector</h1>
+            <p class="subtitle">Detect spam, phishing, and social engineering attacks with AI</p>
+        </header>
+
+        <div class="main-content">
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('text')">Paste Text</button>
+                <button class="tab" onclick="switchTab('pdf')">Upload PDFs</button>
+            </div>
+
+            <!-- Text Input Tab -->
+            <div id="text-tab" class="tab-content active">
+                <div class="input-section">
+                    <textarea id="email-text" placeholder="Paste your email content here..."></textarea>
+                </div>
+                <button class="button" onclick="analyzeText()">Analyze Email</button>
+            </div>
+
+            <!-- PDF Upload Tab -->
+            <div id="pdf-tab" class="tab-content">
+                <div class="input-section">
+                    <div class="file-upload" id="file-upload" onclick="document.getElementById('file-input').click()">
+                        <input type="file" id="file-input" accept=".pdf" multiple onchange="handleFiles(this.files)">
+                        <p>📎 Click to upload or drag & drop PDF files</p>
+                        <p style="font-size: 14px; color: #999; margin-top: 10px;">You can upload multiple PDF files at once</p>
+                    </div>
+                    <div id="file-list" class="file-list"></div>
+                </div>
+                <button class="button" id="analyze-pdf-btn" onclick="analyzePDFs()" disabled>Analyze PDFs</button>
+            </div>
+
+            <!-- Results Section -->
+            <div id="results" class="results"></div>
+        </div>
+    </div>
+
+    <script>
+        let selectedFiles = [];
+        let currentTab = 'text';
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+            event.target.classList.add('active');
+            document.getElementById(tab + '-tab').classList.add('active');
+
+            // Clear results when switching tabs
+            document.getElementById('results').innerHTML = '';
+        }
+
+        // Drag and drop functionality
+        const fileUpload = document.getElementById('file-upload');
+
+        fileUpload.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            fileUpload.classList.add('drag-over');
+        });
+
+        fileUpload.addEventListener('dragleave', () => {
+            fileUpload.classList.remove('drag-over');
+        });
+
+        fileUpload.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileUpload.classList.remove('drag-over');
+            handleFiles(e.dataTransfer.files);
+        });
+
+        function handleFiles(files) {
+            selectedFiles = Array.from(files).filter(f => f.name.toLowerCase().endsWith('.pdf'));
+
+            const fileList = document.getElementById('file-list');
+            const analyzeBtn = document.getElementById('analyze-pdf-btn');
+
+            if (selectedFiles.length > 0) {
+                fileList.innerHTML = `<strong>Selected files:</strong><br>${selectedFiles.map(f => f.name).join('<br>')}`;
+                analyzeBtn.disabled = false;
+            } else {
+                fileList.innerHTML = '<span style="color: #dc3545;">Please select PDF files only</span>';
+                analyzeBtn.disabled = true;
+            }
+        }
+
+        async function analyzeText() {
+            const text = document.getElementById('email-text').value.trim();
+
+            if (!text) {
+                showError('Please paste email content to analyze');
+                return;
+            }
+
+            showLoading();
+
+            try {
+                const response = await fetch('/api/analyze/text', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ text })
+                });
+
+                const result = await response.json();
+
+                if (result.error) {
+                    showError(result.error);
+                } else {
+                    displayResults([result]);
+                }
+            } catch (error) {
+                showError('Failed to analyze email: ' + error.message);
+            }
+        }
+
+        async function analyzePDFs() {
+            if (selectedFiles.length === 0) {
+                showError('Please select PDF files to analyze');
+                return;
+            }
+
+            showLoading();
+
+            const formData = new FormData();
+            selectedFiles.forEach(file => {
+                formData.append('files', file);
+            });
+
+            try {
+                const response = await fetch('/api/analyze/pdf', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    showError(data.error);
+                } else if (data.results) {
+                    displayResults(data.results);
+                }
+            } catch (error) {
+                showError('Failed to analyze PDFs: ' + error.message);
+            }
+        }
+
+        function showLoading() {
+            const results = document.getElementById('results');
+            results.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Analyzing with AI... This may take a moment</p>
+                </div>
+            `;
+        }
+
+        function showError(message) {
+            const results = document.getElementById('results');
+            results.innerHTML = `<div class="error">❌ ${message}</div>`;
+        }
+
+        function displayResults(results) {
+            const resultsDiv = document.getElementById('results');
+
+            if (!results || results.length === 0) {
+                resultsDiv.innerHTML = '<div class="error">No results to display</div>';
+                return;
+            }
+
+            let html = '<h2 style="margin-bottom: 20px;">Analysis Results</h2>';
+
+            results.forEach(result => {
+                const riskLevel = (result.risk_level || 'UNKNOWN').toLowerCase();
+                const filename = result.filename ? `<span class="filename">📄 ${result.filename}</span>` : '';
+
+                if (result.error) {
+                    html += `
+                        <div class="result-card">
+                            ${filename}
+                            <div class="error">${result.error}</div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                html += `
+                    <div class="result-card ${riskLevel}">
+                        <div class="result-header">
+                            ${filename}
+                            <span class="risk-badge ${riskLevel}">${result.risk_level}</span>
+                            <span class="category-badge">${result.category}</span>
+                            ${result.confidence ? `<span class="confidence">Confidence: ${result.confidence}%</span>` : ''}
+                        </div>
+
+                        ${result.summary ? `<div class="summary">${result.summary}</div>` : ''}
+
+                        ${result.red_flags && result.red_flags.length > 0 ? `
+                            <div class="red-flags">
+                                <h4>🚩 Red Flags Detected:</h4>
+                                <ul>
+                                    ${result.red_flags.map(flag => `<li>${flag}</li>`).join('')}
+                                </ul>
+                            </div>
+                        ` : ''}
+
+                        ${result.analysis ? `
+                            <div class="analysis-details">
+                                ${result.analysis.sender_authenticity ? `
+                                    <div class="analysis-item">
+                                        <strong>Sender Authenticity:</strong>
+                                        <span>${result.analysis.sender_authenticity}</span>
+                                    </div>
+                                ` : ''}
+                                ${result.analysis.urgency_tactics ? `
+                                    <div class="analysis-item">
+                                        <strong>Urgency Tactics:</strong>
+                                        <span>${result.analysis.urgency_tactics}</span>
+                                    </div>
+                                ` : ''}
+                                ${result.analysis.suspicious_links ? `
+                                    <div class="analysis-item">
+                                        <strong>Suspicious Links:</strong>
+                                        <span>${result.analysis.suspicious_links}</span>
+                                    </div>
+                                ` : ''}
+                                ${result.analysis.language_patterns ? `
+                                    <div class="analysis-item">
+                                        <strong>Language Patterns:</strong>
+                                        <span>${result.analysis.language_patterns}</span>
+                                    </div>
+                                ` : ''}
+                                ${result.analysis.impersonation ? `
+                                    <div class="analysis-item">
+                                        <strong>Impersonation Check:</strong>
+                                        <span>${result.analysis.impersonation}</span>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        ` : ''}
+
+                        ${result.recommendation ? `
+                            <div class="recommendation">
+                                <strong>💡 Recommendation:</strong> ${result.recommendation}
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            });
+
+            resultsDiv.innerHTML = html;
+        }
+    </script>
+</body>
+</html>
