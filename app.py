@@ -19,8 +19,18 @@ if not os.path.exists(UPLOAD_FOLDER):
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
-# Initialize Anthropic client
-client = anthropic.Anthropic(api_key=os.getenv('ANTHROPIC_API_KEY'))
+# Lazy initialization of Anthropic client
+_client = None
+
+def get_client():
+    """Get or create Anthropic client"""
+    global _client
+    if _client is None:
+        api_key = os.getenv('ANTHROPIC_API_KEY')
+        if not api_key or api_key == 'your_api_key_here':
+            raise ValueError("Please set a valid ANTHROPIC_API_KEY in your .env file")
+        _client = anthropic.Anthropic(api_key=api_key)
+    return _client
 
 ANALYSIS_PROMPT = """You are an expert email security analyst specializing in detecting spam, scams, and social engineering attacks.
 
@@ -65,7 +75,7 @@ Respond ONLY with valid JSON, no other text."""
 def analyze_email(content):
     """Analyze email content using Claude API"""
     try:
-        message = client.messages.create(
+        message = get_client().messages.create(
             model="claude-sonnet-4-5-20250929",
             max_tokens=2048,
             messages=[
